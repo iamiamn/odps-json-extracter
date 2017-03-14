@@ -1,21 +1,17 @@
 package jsonProcess;
 import com.aliyun.odps.udf.UDF;
 import com.google.gson.Gson;
-
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.lang.Math;
 
-//不同的json字符串，内部的json对象不同例如
-//[{\"time\":7149,\"type\":0,\"target\":\"****\"},{\"time\":5718,\"type\":1,\"target\":\"****\"}]
-//json字符串包含两个对象，对象都包含有time\type\target这三个属性，我们要提取的只有time和type，因此只需要新建一个包含这两个成员的类
-//类内还必须为每个类的成员编写getter和setter函数
-
 public final class parseJson extends UDF {
-//新建getMIn和getMax，getVariance等统计函数
+	//不同的json字符串，内部的json对象不同例如
+	//[{\"time\":7149,\"type\":0,\"target\":\"****\"},{\"time\":5718,\"type\":1,\"target\":\"****\"}]
+	//json字符串包含两个对象，对象都包含有time\type\target这三个属性，我们要提取的只有time和type，因此只需要新建一个包含这两个成员的类
+	//类内还必须为每个类的成员编写getter和setter函数
 
-  public static double getMin(double[] inputData) {
+	//新建getMIn和getMax，getVariance等统计函数
+	public static double getMin(double[] inputData) {
 		  if (inputData == null || inputData.length == 0)
 		   return -1;
 		  int len = inputData.length;
@@ -50,7 +46,7 @@ public final class parseJson extends UDF {
 
 		 }
 	
-	    public static double getAverage(double[] inputData) {
+	public static double getAverage(double[] inputData) {
 		  if (inputData == null || inputData.length == 0)
 		   return -1;
 		  int len = inputData.length;
@@ -60,7 +56,7 @@ public final class parseJson extends UDF {
 		  return result;
 		 }
 	    
-	    public static double getVariance(double[] inputData) {
+	public static double getVariance(double[] inputData) {
 	    	  int count = getCount(inputData);
 	    	  double sqrsum = getSquareSum(inputData);
 	    	  double average = getAverage(inputData);
@@ -70,7 +66,7 @@ public final class parseJson extends UDF {
 	    	     return Math.sqrt(result);//这里求方差，其实被我改成了标准差
 	    	 }
 	    
-	    public static double getSquareSum(double[] inputData) {
+	public static double getSquareSum(double[] inputData) {
 	    	  if(inputData==null||inputData.length==0)
 	    	      return -1;
 	    	     int len=inputData.length;
@@ -82,7 +78,7 @@ public final class parseJson extends UDF {
 	    	  
 	    }
 	    
-	    public static int getCount(double[] inputData) {
+	public static int getCount(double[] inputData) {
 	    		  if (inputData == null)
 	    		   return -1;
 
@@ -90,8 +86,8 @@ public final class parseJson extends UDF {
 	    		 }
 	    
 	
-	public static class ElemFocus{//新建类，		[{\"time\":7149,\"type\":0,\"target\":\"****\"}
-    public int time;
+	public static class ElemFocus{//新建类，	针对的json字符串:[{\"time\":7149,\"type\":0,\"target\":\"****\"}
+		public int time;
 		public int type;
 		public String target;
 		//
@@ -116,17 +112,16 @@ public final class parseJson extends UDF {
 		
 		
 	}	
-	// Json String to Java object
-		public static <T> T getObjFromJsonStr(String source, Class<T> bean) {
-			return new JSONDeserializer<T>().deserialize(source, bean);
-		}
-    
 	public  String extractEF(String strJson){//传入json字符串，提取字符串内所有的elemfoucs类对象，返回统计信息
-    double type1_rate, time_sd, time_range;
+		Gson myGson = new Gson();
+		double type1_rate, time_sd, time_range;
 		
 		double type1_count = 0;
-    int total_count = 0;
-    ElemFocus[] elems = getObjFromJsonStr(strJson, ElemFocus[].class);
+        int total_count = 0;
+        
+		
+		ElemFocus[] elems = myGson.fromJson(strJson,ElemFocus[].class);
+		if (elems.length == 0) return "-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1";
 		double[] time_series = new double[elems.length];
 		if (elems.length == 0){
 			type1_rate = 0;
@@ -135,20 +130,21 @@ public final class parseJson extends UDF {
 		}
 		else {
 			for (ElemFocus elem: elems){
-				time_series[total_count] = elem.getTime();
+				time_series[total_count] = elem.time;
 				total_count += 1;				
-				if (elem.getType() == 1){
+				if (elem.type == 1){
 					type1_count += 1;
 				}
 			}
-			type1_rate = type1_count / total_count;//如果两个都是int类型，因此分子小于分母时，计算结果为0。因此把分子或者分母改为double类型
-      time_sd = getVariance(time_series);
+			type1_rate = type1_count / total_count;//如果两个都是int，计算结果为0
+			time_sd = getVariance(time_series);
 			time_range = getMax(time_series) - getMin(time_series);
 		}
 		
 		return String.valueOf(total_count) + " " + String.valueOf(type1_rate) + " " +
-		String.valueOf(time_sd) + " " + String.valueOf( time_range);//返回的多个统计结果，不同的统计结果用空格分开，方便使用sql进行转换
-    }
+		String.valueOf(time_sd) + " " + String.valueOf( time_range);	
+		
+	}
 	public static class MouseClick{
 		public String Button,attr,target;
 		public int x, y,time;
@@ -192,14 +188,16 @@ public final class parseJson extends UDF {
 	public String extractMC(String strJson){
 		
 		Gson myGson = new Gson();
+		
+		
 		MouseClick[] elems = myGson.fromJson(strJson, MouseClick[].class);
+		if (elems.length == 0) return "-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1";
 		int total_count = 0;
 		double left_count = 0;
 		double[] x_series = new double[elems.length];
 		double[] y_series = new double[elems.length];
 		double[] time_series = new double[elems.length];
 		for (MouseClick elem : elems){
-			//未完
 			x_series[total_count] = elem.x;
 			y_series[total_count] = elem.y;
 			time_series[total_count] = elem.time;
@@ -251,7 +249,10 @@ public final class parseJson extends UDF {
 	}
 	public String extractMM(String strJson){
 		Gson myGson = new Gson();
+		
+		
 		MouseMove[] elems = myGson.fromJson(strJson, MouseMove[].class);
+		if (elems.length == 0) return "-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1";
 		int total_count = 0;
 		double[] x_series = new double[elems.length];
 		double[] y_series = new double[elems.length];
@@ -277,7 +278,6 @@ public final class parseJson extends UDF {
 		+ " " + String.valueOf(getVariance(x_series)) + " " + String.valueOf(getVariance(y_series))+ " " + String.valueOf(x_range)
 		+ " " + String.valueOf(y_range) + " " + String.valueOf(total_count);
 	}
-
 	public static class MouseSample{
 		public int x, y;
 
@@ -299,14 +299,14 @@ public final class parseJson extends UDF {
 	}
 	public String extractMS(String strJson){
 		Gson myGson = new Gson();
+		
+		
 		MouseSample[] elems = myGson.fromJson(strJson, MouseSample[].class);
+		if (elems.length == 0) return "-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1";
 		int total_count = 0;
 		double[] x_series = new double[elems.length];
 		double[] y_series = new double[elems.length];
 		for (MouseSample elem : elems){
-//			ew_series[total_count] = elem.ew;
-//			ex_series[total_count] = elem.ex;
-			//未完
 			x_series[total_count] = elem.x;
 			y_series[total_count] = elem.y;
 			total_count += 1;
@@ -319,57 +319,57 @@ public final class parseJson extends UDF {
 	}
 	public static class Keyboard{
 		int time;
-
 		public int getTime() {
 			return time;
 		}
-
 		public void setTime(int time) {
 			this.time = time;
 		}
 	}
 	public String extractKB(String strJson){
 		Gson myGson = new Gson();
+		
+		
 		Keyboard[] elems = myGson.fromJson(strJson, Keyboard[].class);
+		if (elems.length == 0) return "-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1";
 		int total_count = 0;
 		double[] time_series = new double[elems.length];
 		for (Keyboard elem : elems){
-//			ew_series[total_count] = elem.ew;
-//			ex_series[total_count] = elem.ex;
-			//未完
 			time_series[total_count] = elem.time;
 			total_count += 1;
 		}
 		double time_range = getMax(time_series) - getMin(time_series);
 		Arrays.sort(time_series);
-		double[] time_sep = new double[elems.length - 1];
-		for (int i = 0; i < elems.length - 1; i++){
-			time_sep[i] = time_series[i + 1] - time_series[i];
-			
-		}
-
 		String result = String.valueOf(total_count) + " " + String.valueOf(getVariance(time_series)) + " " + String.valueOf(time_range);
 		return result;
 	}
-	
-	public String evaluate(String s, String jsonType){//制作odps的UDF，必须在类内设置evalute函数，传入的都为String参数	
-                int typing = Integer.valueOf(jsonType);//第二个参数是判断该json字符串采用哪个类来进行json对象解析
-		if (typing == 1){
-			return extractEF(s);
+	public String evaluate(String s, String jsonType){
+		s = s.trim();
+		int typing = Integer.valueOf(jsonType);
+		try{
+			if (typing == 1){
+				return extractEF(s);
+			}
+			else if (typing == 3){
+				return extractMC(s);
+			}
+			else if (typing == 4){
+				return extractMM(s);
+			}
+			else if (typing == 5){
+				return extractMS(s);
+			}
+			else if (typing == 7){
+				return extractKB(s);
+			}
+			else return "fail";//必须加上
+			
+		}catch(Exception e){
+			System.out.println(s);
+//			e.printStackTrace();
+			return "-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1";
 		}
-		else if (typing == 3){
-			return extractMC(s);
-		}
-		else if (typing == 4){
-			return extractMM(s);
-		}
-		else if (typing == 5){
-			return extractMS(s);
-		}
-		else if (typing == 7){
-			return extractKB(s);
-		}
-		else return "fail";//必须加上
+		
 		
 	}
 	public String evaluate(String s){//不能使用static 关键字
