@@ -1,13 +1,14 @@
+
 #新建表格
 CREATE TABLE IF NOT EXISTS train11 AS SELECT * FROM odps_tc_257100_f673506e024.adl_tianchi_renji_training_fdt;
 CREATE TABLE IF NOT EXISTS test1_1 AS SELECT * FROM odps_tc_257100_f673506e024.adl_tianchi_renji_test_fdt1
 #按照https://help.aliyun.com/document_detail/27811.html?spm=5176.doc27812.6.553.Sq6vNF 的指导，配置本地maven项目，在本地编译好包含parseJson类的jar包
 #后，在数加平台\资源管理，上传java文件，然后新建sql任务，输入下面语句
 DROP FUNCTION IF EXISTS parseJson;
-CREATE FUNCTION parseJson1 AS jsonProcess.parseJson USING train1_json_extract.jar;
+CREATE FUNCTION parseJson AS jsonProcess.parseJson USING train1_json_extract.jar;
 #从json字符串提取特征
-CREATE TABLE IF NOT EXISTS train1_jsoned AS SELECT parseJson1(a1, "EF") AS elemFocus, a2 AS jsLoadTime, parseJson1(a3, "MC") AS mouseClick, parseJson1(a4, "MM") AS mouseMove,
-parseJson1(a5, "MS") AS mouseSample, parseJson1(a7, "KB"), id, label AS keyBoard FROM train11;
+CREATE TABLE IF NOT EXISTS train1_jsoned AS SELECT parseJson(a1, "EF") AS elemFocus, a2 AS jsLoadTime, parseJson(a3, "MC") AS mouseClick, parseJson(a4, "MM") AS mouseMove,
+parseJson(a5, "MS") AS mouseSample, parseJson(a7, "KB"), id, label AS keyBoard FROM train11;
 
 #特征二次转换：第一次提取的字符串结果，结果中包含多个统计数据，数据间用空格隔开，因此利用split_part分割
 #split_part函数解释：odps的sql内建函数列表参考网址 http://www.aiwanba.com/plugin/odps-doc/prddoc/odps_sql/odps_sql_func.html
