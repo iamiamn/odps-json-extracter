@@ -352,8 +352,8 @@ public final class parseJson extends UDF {
 		return result;
 	}
 	
-	public String evaluate(String s, String jsonType){
-		int typing = Integer.valueOf(jsonType);
+	public String evaluate(String s, String jsonType){//制作odps的UDF，必须在类内设置evalute函数，传入的都为String参数	
+                int typing = Integer.valueOf(jsonType);//第二个参数是判断该json字符串采用哪个类来进行json对象解析
 		if (typing == 1){
 			return extractEF(s);
 		}
