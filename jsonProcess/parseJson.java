@@ -5,10 +5,7 @@ import java.util.Arrays;
 import java.lang.Math;
 
 public final class parseJson extends UDF {
-	//不同的json字符串，内部的json对象不同例如
-	//[{\"time\":7149,\"type\":0,\"target\":\"****\"},{\"time\":5718,\"type\":1,\"target\":\"****\"}]
-	//json字符串包含两个对象，对象都包含有time\type\target这三个属性，我们要提取的只有time和type，因此只需要新建一个包含这两个成员的类
-	//类内还必须为每个类的成员编写getter和setter函数
+	
 
 	//新建getMIn和getMax，getVariance等统计函数
 	public static double getMin(double[] inputData) {
@@ -85,7 +82,10 @@ public final class parseJson extends UDF {
 	    		  return inputData.length;
 	    		 }
 	    
-	
+	//为了提取json字符串为scala object， 我们需要根据json对象内容新建类，例如下面的json对象数组
+	//[{\"time\":7149,\"type\":0,\"target\":\"****\"},{\"time\":5718,\"type\":1,\"target\":\"****\"}]
+	//这个json字符串包含两个对象，没个对象都包含有time\type\target这三个属性，我们要提取的只有time和type，因此只需要新建一个包含这两个成员的类
+	//类内还必须为每个类的成员编写getter和setter函数，使用eclipse 可以右键java包，自动化为类内的全部对象添加对应的getter和setter函数
 	public static class ElemFocus{//新建类，	针对的json字符串:[{\"time\":7149,\"type\":0,\"target\":\"****\"}
 		public int time;
 		public int type;
