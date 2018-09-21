@@ -1,2 +1,2 @@
 # odps-json-extracter
-aliyun odps UDF(user defined function) for extracting objects from json string.参加阿里云的平台赛，安全云计算，变量为json字符串，因此需要在数加平台上用SQL语句调用自己编写的UDF,从json字符串的对象数组中提取特征
+aliyun odps UDF(user defined function) for extracting objects from json string. I Participated in 2017 AliYun Cyber Security Data Science Centest. Input Here are Json String, therefore I need to construct User Define Function which is invoked in online Hive Database, in order to extract self-defined characters from arrays of Json Strings
